@@ -27,3 +27,6 @@ __pycache__/
 # Local tooling
 .claude/
 .vercel
+
+# Pitch video build (footage frames, renders)
+brag-output*/

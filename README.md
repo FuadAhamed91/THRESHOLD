@@ -4,6 +4,8 @@
 
 **Live demo: [threshold-coral-five.vercel.app](https://threshold-coral-five.vercel.app).** It is a static deploy, so Ring delivery events are simulated in the browser and labelled as simulated. Run the backend (below) to receive real Ring webhooks.
 
+**Pitch video (2:44): [youtu.be/xMQ1ByH46a0](https://youtu.be/xMQ1ByH46a0).** It covers the problem in sourced numbers, the full demo and how it is built.
+
 THRESHOLD turns a Ring package-delivery event into a spatial analysis of an accessible home entrance. It places the parcel in a calibrated 3D model of the entrance, then computes whether the door can still open, whether the parcel intrudes on the accessible route, how much clear width remains, and whether a wheelchair route to the door still exists. It then walks a caregiver through fixing it. Every red and green state in the scene comes from a deterministic geometry engine, not from animation.
 
 ![THRESHOLD intro over the blue-hour entrance](docs/screens/00-intro.jpg)
