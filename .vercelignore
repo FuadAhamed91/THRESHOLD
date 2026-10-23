@@ -1,0 +1,16 @@
+# Vercel serves the static frontend only; the FastAPI Ring adapter (server/)
+# and the Blender sources are not part of the deploy.
+node_modules
+dist
+.vercel
+.claude
+server
+blender
+docs
+scripts
+test-results
+playwright-report
+*.log
+.env
+.env.*
+!.env.example

@@ -2,6 +2,7 @@
   "name": "threshold",
   "private": true,
   "version": "1.0.0",
+  "license": "MIT",
   "description": "THRESHOLD: cinematic 3D accessibility intelligence for Ring package deliveries.",
   "type": "module",
   "scripts": {

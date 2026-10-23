@@ -2,6 +2,8 @@
 
 **When a delivery becomes an obstacle.**
 
+**Live demo: [threshold-coral-five.vercel.app](https://threshold-coral-five.vercel.app).** It is a static deploy, so Ring delivery events are simulated in the browser and labelled as simulated. Run the backend (below) to receive real Ring webhooks.
+
 THRESHOLD turns a Ring package-delivery event into a spatial analysis of an accessible home entrance. It places the parcel in a calibrated 3D model of the entrance, then computes whether the door can still open, whether the parcel intrudes on the accessible route, how much clear width remains, and whether a wheelchair route to the door still exists. It then walks a caregiver through fixing it. Every red and green state in the scene comes from a deterministic geometry engine, not from animation.
 
 ![THRESHOLD intro over the blue-hour entrance](docs/screens/00-intro.jpg)
@@ -45,6 +47,8 @@ npm run server         # http://127.0.0.1:8787, proxied by Vite under /api
 Useful URL parameters: `?scenario=A|B|C`, `?autostart=1` (start the cinematic immediately), `?autoplay=0` (Act IV waits for you to move the parcel), `?speed=2` (faster playback for rehearsals).
 
 Controls: drag the parcel in explore mode; **Q/E** or mouse wheel while dragging rotate it; **Space** pauses, **Esc** skips to explore, **R** replays, **C** toggles the cutaway. Grabbing the camera at any time hands it to you; a button returns it to the director.
+
+Deploying: the repo deploys to Vercel as a static site (`vercel.json`). A production build makes no backend calls unless `VITE_THRESHOLD_API_BASE` is set at build time. When it is set, the site talks to that FastAPI deployment, whose `THRESHOLD_CORS_ORIGINS` must include the site's origin.
 
 ## Commands
 
@@ -108,6 +112,18 @@ Ring events contain **no parcel position, size or image**. The event shows *that
 
 Setup: copy `server/.env.example` to `server/.env`, set `RING_WEBHOOK_SIGNING_KEY` (and optionally a token), run `npm run server`, then expose `/api/ring/webhook` with a tunnel such as cloudflared or ngrok. `python scripts/send_test_webhook.py` signs a documented-shape payload with your key and posts it locally, so the real verification path can be tested without Ring. Details: [server/README.md](server/README.md).
 
+## Ring track checklist
+
+- **The code calls Ring.**
+  - [`server/threshold_server/ring/client.py`](server/threshold_server/ring/client.py) gets OAuth tokens from `oauth.ring.com` and calls `api.amazonvision.com`: `GET /v1/devices`, `GET /v1/devices/{id}/status` and `POST /v1/devices/{id}/media/image/download`.
+  - The webhook entry point is `POST /api/ring/webhook` in [`server/threshold_server/main.py`](server/threshold_server/main.py). [`ring/signature.py`](server/threshold_server/ring/signature.py) verifies its signature.
+  - The browser receives the normalized events through [`src/integrations/ring/client.ts`](src/integrations/ring/client.ts).
+- **It works through a simulator.** You don't need a Ring device to see it run:
+  - the [live demo](https://threshold-coral-five.vercel.app) runs the in-browser simulator;
+  - `POST /api/simulate/delivery` emits simulated events from the server;
+  - `python scripts/send_test_webhook.py` sends a signed webhook in the documented shape through the real verification path.
+- **Open source.** MIT licensed; see [LICENSE](LICENSE).
+
 ## Blender asset workflow
 
 `blender/scripts/build_entrance.py` builds the whole scene procedurally:
@@ -144,3 +160,7 @@ On an Intel Iris Xe laptop the whole tour renders at about 60 fps at 1440×900.
 3. Act III: the A* search animation, then the 0.39 m vs 0.90 m pinch, and the avatar stopping.
 4. Act IV: click **Move parcel to safe drop zone** and watch the numbers change during the move. The door opens, the route turns green, the avatar enters.
 5. Click **Explore the model**, drag the parcel back onto the ramp, and move the required-width slider in **Scenario** to show that everything recomputes. Then switch to Scenario C to show the uncertainty handling.
+
+## License
+
+[MIT](LICENSE)

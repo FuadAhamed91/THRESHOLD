@@ -3,8 +3,14 @@ import type { BackendConnection, IntegrationStatus, NormalizedRingEvent } from '
 
 /**
  * Ring adapter client. All Ring credentials live in the backend; the browser
- * only talks to /api on the same origin (Vite proxies it in development).
+ * only talks to its /api. In development Vite proxies /api to the FastAPI
+ * server; a static production deploy (e.g. Vercel) runs the in-browser Ring
+ * simulator unless VITE_THRESHOLD_API_BASE points at a deployed backend.
  */
+const API_BASE = String(import.meta.env.VITE_THRESHOLD_API_BASE ?? '').replace(/\/$/, '');
+export const backendEnabled = import.meta.env.DEV || API_BASE !== '';
+const api = (path: string) => `${API_BASE}${path}`;
+
 export interface RingStreamHandlers {
   onEvent: (event: NormalizedRingEvent) => void;
   onStatus: (status: IntegrationStatus) => void;
@@ -12,6 +18,10 @@ export interface RingStreamHandlers {
 }
 
 export function connectRingStream(handlers: RingStreamHandlers): () => void {
+  if (!backendEnabled) {
+    handlers.onConnection('offline');
+    return () => {};
+  }
   let source: EventSource | null = null;
   let retry = 0;
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -20,7 +30,7 @@ export function connectRingStream(handlers: RingStreamHandlers): () => void {
   const open = () => {
     if (closed) return;
     handlers.onConnection('connecting');
-    source = new EventSource('/api/events/stream');
+    source = new EventSource(api('/api/events/stream'));
     source.addEventListener('hello', (msg) => {
       retry = 0;
       handlers.onConnection('online');
@@ -67,13 +77,13 @@ async function json<T>(res: Response): Promise<T> {
 }
 
 export async function fetchIntegrationStatus(signal?: AbortSignal): Promise<IntegrationStatus | null> {
-  const res = await fetch('/api/integration/status', { signal });
+  const res = await fetch(api('/api/integration/status'), { signal });
   return parseStatus(await json(res));
 }
 
 /** Ask the backend to emit a simulated event (labelled simulated end to end). */
 export async function requestServerSimulation(scenario: 'A' | 'B' | 'C'): Promise<NormalizedRingEvent | null> {
-  const res = await fetch('/api/simulate/delivery', {
+  const res = await fetch(api('/api/simulate/delivery'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ scenario }),
@@ -87,7 +97,7 @@ export async function requestServerSimulation(scenario: 'A' | 'B' | 'C'): Promis
  * credentials and a real device; returns an object URL for the JPEG.
  */
 export async function requestRingSnapshot(deviceId: string, timestamp: number): Promise<{ url: string; origin: string | null }> {
-  const res = await fetch('/api/ring/snapshot', {
+  const res = await fetch(api('/api/ring/snapshot'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ deviceId, timestamp }),

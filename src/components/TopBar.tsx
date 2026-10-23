@@ -1,6 +1,11 @@
 import { Radio, WifiOff } from 'lucide-react';
+import { backendEnabled } from '../integrations/ring/client';
 import { useThreshold } from '../state/store';
 import { Wordmark } from './Wordmark';
+
+const STATIC_NOTE =
+  'This deploy has no backend: Ring delivery events are simulated in the browser and labelled as such. ' +
+  'Run the FastAPI adapter in server/ to receive signed Ring webhooks.';
 
 function ConnectionBadge() {
   const connection = useThreshold((s) => s.connection);
@@ -9,7 +14,11 @@ function ConnectionBadge() {
   let label: string;
   let detail: string;
   let color: string;
-  if (connection !== 'online') {
+  if (!backendEnabled) {
+    label = 'Simulation mode';
+    detail = 'static demo · in-browser Ring simulator';
+    color = 'text-estimate';
+  } else if (connection !== 'online') {
     label = 'Simulation mode';
     detail = connection === 'connecting' ? 'connecting to backend…' : 'backend offline · in-browser simulation';
     color = 'text-estimate';
@@ -23,11 +32,11 @@ function ConnectionBadge() {
     color = 'text-estimate';
   }
   return (
-    <div className="glass flex items-center gap-2.5 rounded-xl px-3 py-2" title={integration?.notes?.join('\n') ?? ''}>
+    <div className="glass flex items-center gap-2.5 rounded-xl px-3 py-2" title={integration?.notes?.join('\n') ?? (backendEnabled ? '' : STATIC_NOTE)}>
       <span className={`relative inline-flex h-2 w-2 rounded-full ${color} pulse-dot`} style={{ background: 'currentColor' }} />
       <div className="leading-tight">
         <div className="flex items-center gap-1.5 text-[12px] font-semibold text-text-1">
-          {connection === 'offline' ? <WifiOff size={12} className="text-text-3" /> : <Radio size={12} className={color} />}
+          {backendEnabled && connection === 'offline' ? <WifiOff size={12} className="text-text-3" /> : <Radio size={12} className={color} />}
           {label}
         </div>
         <div className="text-[10.5px] text-text-3">{detail}</div>
