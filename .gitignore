@@ -1,0 +1,28 @@
+node_modules/
+dist/
+*.local
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+*.log
+coverage/
+.vite/
+test-results/
+playwright-report/
+
+# Blender: the build script regenerates these
+*.blend1
+*.blend@
+blender/source/*.blend
+blender/cache/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Local tooling
+.claude/
